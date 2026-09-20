@@ -13,7 +13,10 @@ import type {
     UpdateExpenseRequest,
 } from "@/types/expense";
 
-export function useExpenses() {
+export function useExpenses(
+    month?: number,
+    year?: number
+) {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -23,12 +26,12 @@ export function useExpenses() {
         setError("");
 
         try {
-            const data = await getExpenses();
+            const data = await getExpenses(month, year);
             setExpenses(data);
         } catch (err: any) {
             setError(
                 err.response?.data?.detail ??
-                "Failed to load expenses."
+                    "Failed to load expenses."
             );
         } finally {
             setLoading(false);
@@ -47,7 +50,7 @@ export function useExpenses() {
         } catch (err: any) {
             setError(
                 err.response?.data?.detail ??
-                "Failed to create expense."
+                    "Failed to create expense."
             );
         } finally {
             setLoading(false);
@@ -67,7 +70,7 @@ export function useExpenses() {
         } catch (err: any) {
             setError(
                 err.response?.data?.detail ??
-                "Failed to update expense."
+                    "Failed to update expense."
             );
         } finally {
             setLoading(false);
@@ -84,7 +87,7 @@ export function useExpenses() {
         } catch (err: any) {
             setError(
                 err.response?.data?.detail ??
-                "Failed to delete expense."
+                    "Failed to delete expense."
             );
         } finally {
             setLoading(false);
@@ -93,7 +96,7 @@ export function useExpenses() {
 
     useEffect(() => {
         fetchExpenses();
-    }, []);
+    }, [month, year]);
 
     return {
         expenses,

@@ -6,8 +6,17 @@ import type {
 
 import api from "./api";
 
-export async function getExpenses(): Promise<Expense[]> {
-    const response = await api.get("/expenses");
+export async function getExpenses(
+    month?: number,
+    year?: number
+): Promise<Expense[]> {
+    const response = await api.get("/expenses", {
+        params:
+            month !== undefined && year !== undefined
+                ? { month, year }
+                : undefined,
+    });
+
     return response.data;
 }
 
