@@ -18,4 +18,4 @@ export const expenseSchema = z.object({
         .min(1, "Please select an expense date"),
 });
 
-export type ExpenseFormData = z.infer<typeof expenseSchema>;
+export type ExpenseFormData = z.output<typeof expenseSchema>;

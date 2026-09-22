@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import {
     budgetSchema,
@@ -42,7 +43,7 @@ export default function BudgetForm({
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<BudgetFormData>({
+    } = useForm<z.input<typeof budgetSchema>, any, BudgetFormData>({
         resolver: zodResolver(budgetSchema),
         defaultValues: {
             monthly_limit: 0,

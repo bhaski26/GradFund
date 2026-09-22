@@ -19,4 +19,4 @@ export const incomeSchema = z.object({
         .max(2100, "Invalid year"),
 });
 
-export type IncomeFormData = z.infer<typeof incomeSchema>;
+export type IncomeFormData = z.output<typeof incomeSchema>;

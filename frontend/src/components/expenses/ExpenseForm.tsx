@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import {
     expenseSchema,
@@ -42,7 +43,7 @@ export default function ExpenseForm({
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<ExpenseFormData>({
+    } = useForm<z.input<typeof expenseSchema>, any, ExpenseFormData>({
         resolver: zodResolver(expenseSchema),
         defaultValues: {
             title: "",

@@ -6,7 +6,10 @@ import BudgetTable from "@/components/budget/BudgetTable";
 
 import { useBudget } from "@/hooks/useBudget";
 
-import type { Budget as BudgetType } from "@/types/budget";
+import type {
+    Budget,
+    UpdateBudgetRequest,
+} from "@/types/budget";
 
 export default function Budget() {
     const {
@@ -19,9 +22,9 @@ export default function Budget() {
     } = useBudget();
 
     const [editingBudget, setEditingBudget] =
-        useState<BudgetType | null>(null);
+        useState<Budget | null>(null);
 
-    function handleEdit(budget: BudgetType) {
+    function handleEdit(budget: Budget) {
         setEditingBudget(budget);
     }
 
@@ -31,7 +34,7 @@ export default function Budget() {
 
     async function handleEditBudget(
         id: number,
-        data: BudgetType
+        data: UpdateBudgetRequest
     ) {
         await editBudget(id, data);
         setEditingBudget(null);

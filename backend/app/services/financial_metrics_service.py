@@ -33,64 +33,91 @@ def calculate_budget_usage(
     )
 
 
-def calculate_budget_score(
-    budget_usage: float,
-) -> int:
-    """
-    Calculate the budget discipline component
-    of the financial health score.
-    """
-
-    if budget_usage <= 50:
-        return 100
-
-    elif budget_usage <= 60:
-        return 90
-
-    elif budget_usage <= 70:
-        return 80
-
-    elif budget_usage <= 80:
-        return 70
-
-    elif budget_usage <= 90:
-        return 55
-
-    elif budget_usage <= 100:
-        return 40
-
-    else:
-        return 20
-
-
 def calculate_savings_score(
     savings_rate: float,
-) -> int:
+) -> float:
     """
-    Calculate the savings discipline component
-    of the financial health score.
+    Calculate savings health on a 0-100 scale.
+
+    Higher savings are rewarded with diminishing returns.
     """
+
+    if savings_rate <= 0:
+        return 0.0
 
     if savings_rate >= 50:
-        return 100
+        return round(
+            min(
+                100,
+                95 + (savings_rate - 50) * 0.1,
+            ),
+            2,
+        )
 
-    elif savings_rate >= 40:
-        return 90
+    return round(
+        min(
+            95,
+            savings_rate * 1.9,
+        ),
+        2,
+    )
 
-    elif savings_rate >= 30:
-        return 80
 
-    elif savings_rate >= 20:
-        return 70
+def calculate_budget_score(
+    budget_usage: float,
+) -> float:
+    """
+    Calculate budget discipline on a 0-100 scale.
 
-    elif savings_rate >= 10:
-        return 55
+    The score decreases progressively as budget usage rises.
+    """
 
-    elif savings_rate >= 0:
-        return 40
+    if budget_usage < 0:
+        budget_usage = 0
+
+    if budget_usage <= 50:
+        score = 100 - (budget_usage * 0.20)
+
+    elif budget_usage <= 80:
+        score = 90 - ((budget_usage - 50) * 0.50)
+
+    elif budget_usage <= 100:
+        score = 75 - ((budget_usage - 80) * 1.50)
 
     else:
-        return 20
+        score = 45 - ((budget_usage - 100) * 1.50)
+
+    return round(
+        max(0, min(100, score)),
+        2,
+    )
+
+
+def calculate_margin_score(
+    savings_rate: float,
+) -> float:
+    """
+    Calculate financial margin on a 0-100 scale.
+
+    The score reflects how much income remains after expenses.
+    """
+
+    if savings_rate <= 0:
+        return 0.0
+
+    if savings_rate <= 30:
+        return round(
+            (savings_rate / 30) * 80,
+            2,
+        )
+
+    return round(
+        min(
+            100,
+            80 + ((savings_rate - 30) / 40) * 20,
+        ),
+        2,
+    )
 
 
 def calculate_health_score(
@@ -98,23 +125,67 @@ def calculate_health_score(
     savings_rate: float,
 ) -> int:
     """
-    Calculate the overall financial health score.
+    Calculate the overall GradFund Financial Health Score.
 
-    Budget discipline contributes 60%.
-    Savings discipline contributes 40%.
+    Components:
+
+        Savings Health     40%
+        Budget Discipline  35%
+        Financial Margin   25%
+
+    Returns a score between 0 and 100.
     """
-
-    budget_score = calculate_budget_score(
-        budget_usage
-    )
 
     savings_score = calculate_savings_score(
         savings_rate
     )
 
-    health_score = (
-        budget_score * 0.60
-        + savings_score * 0.40
+    budget_score = calculate_budget_score(
+        budget_usage
     )
 
-    return round(health_score)
+    margin_score = calculate_margin_score(
+        savings_rate
+    )
+
+    health_score = (
+        savings_score * 0.40
+        + budget_score * 0.35
+        + margin_score * 0.25
+    )
+
+    return round(
+        max(
+            0,
+            min(
+                100,
+                health_score,
+            ),
+        )
+    )
+
+
+def get_health_status(
+    score: int,
+) -> str:
+    """
+    Convert a numerical health score into
+    a human-readable financial status.
+    """
+
+    if score >= 90:
+        return "Excellent"
+
+    if score >= 80:
+        return "Strong"
+
+    if score >= 70:
+        return "Healthy"
+
+    if score >= 60:
+        return "Needs Attention"
+
+    if score >= 40:
+        return "At Risk"
+
+    return "Critical"

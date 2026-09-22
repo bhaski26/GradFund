@@ -55,6 +55,8 @@ export default function Income() {
                     onCancelEdit={() => setSelectedIncome(null)}
                     onAdd={addIncome}
                     onEdit={editIncome}
+                    loading={loading}
+                    error={error}
                 />
 
                 <IncomeTable

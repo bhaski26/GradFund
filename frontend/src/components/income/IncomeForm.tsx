@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import {
     incomeSchema,
@@ -42,7 +43,7 @@ export default function IncomeForm({
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<IncomeFormData>({
+    } = useForm<z.input<typeof incomeSchema>, any, IncomeFormData>({
         resolver: zodResolver(incomeSchema),
 
         defaultValues: {

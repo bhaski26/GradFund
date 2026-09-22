@@ -15,4 +15,4 @@ export const budgetSchema = z.object({
         .max(2100, "Invalid year"),
 });
 
-export type BudgetFormData = z.infer<typeof budgetSchema>;
+export type BudgetFormData = z.output<typeof budgetSchema>;

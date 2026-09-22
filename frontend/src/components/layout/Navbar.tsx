@@ -1,12 +1,7 @@
-import { useAuth } from "@/contexts/AuthContext";
 import ProfileDropdown from "./ProfileDropdown";
 import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
-
-    const {
-        logout,
-    } = useAuth();
 
     return (
 

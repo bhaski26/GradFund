@@ -47,6 +47,11 @@ export default function Dashboard() {
         
     }
 
+    if (!data) {
+
+        return null;
+    }
+    
     return (
 
         <DashboardLayout>
