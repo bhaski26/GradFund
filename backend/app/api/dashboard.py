@@ -14,29 +14,36 @@ from app.models.income import Income
 
 from app.schemas.dashboard import DashboardResponse
 
-
-router = APIRouter(
-    prefix="/dashboard",
-    tags=["Dashboard"]
+from app.services.financial_metrics_service import (
+    calculate_savings_rate,
+    calculate_budget_usage,
+    calculate_health_score,
 )
 
 
-@router.get("/", response_model=DashboardResponse)
+router = APIRouter(
+    prefix="/dashboard",
+    tags=["Dashboard"],
+)
+
+
+@router.get(
+    "/",
+    response_model=DashboardResponse,
+)
 def get_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    # --------------------------------
-    # Current month and year
-    # --------------------------------
 
     today = date.today()
+
     current_month = today.strftime("%B")
     current_year = today.year
 
-    # --------------------------------
-    # Get budget for current month
-    # --------------------------------
+    # ----------------------------
+    # Current Month Budget
+    # ----------------------------
 
     db_budget = (
         db.query(Budget)
@@ -54,12 +61,12 @@ def get_dashboard(
             detail=(
                 f"Budget not found for "
                 f"{current_month} {current_year}"
-            )
+            ),
         )
 
-    # --------------------------------
-    # Total expenses for current month
-    # --------------------------------
+    # ----------------------------
+    # Current Month Expenses
+    # ----------------------------
 
     total_expenses = (
         db.query(
@@ -69,11 +76,11 @@ def get_dashboard(
             Expense.user_id == current_user.id,
             func.extract(
                 "month",
-                Expense.expense_date
+                Expense.expense_date,
             ) == today.month,
             func.extract(
                 "year",
-                Expense.expense_date
+                Expense.expense_date,
             ) == current_year,
         )
         .scalar()
@@ -82,9 +89,9 @@ def get_dashboard(
     if total_expenses is None:
         total_expenses = 0
 
-    # --------------------------------
-    # Total income for current month
-    # --------------------------------
+    # ----------------------------
+    # Current Month Income
+    # ----------------------------
 
     total_income = (
         db.query(
@@ -101,9 +108,9 @@ def get_dashboard(
     if total_income is None:
         total_income = 0
 
-    # --------------------------------
-    # Financial calculations
-    # --------------------------------
+    # ----------------------------
+    # Financial Metrics
+    # ----------------------------
 
     remaining_budget = (
         db_budget.monthly_limit
@@ -115,30 +122,28 @@ def get_dashboard(
         - total_expenses
     )
 
-    usage_percentage = (
-        total_expenses
-        / db_budget.monthly_limit
-    ) * 100
+    savings_rate = calculate_savings_rate(
+        total_income,
+        total_expenses,
+    )
 
-    # --------------------------------
-    # Financial health score
-    # --------------------------------
+    usage_percentage = calculate_budget_usage(
+        db_budget.monthly_limit,
+        total_expenses,
+    )
 
-    if usage_percentage <= 50:
-        health_score = 95
+    # ----------------------------
+    # Financial Health Score
+    # ----------------------------
 
-    elif usage_percentage <= 80:
-        health_score = 80
+    health_score = calculate_health_score(
+        usage_percentage,
+        savings_rate,
+    )
 
-    elif usage_percentage <= 100:
-        health_score = 60
-
-    else:
-        health_score = 30
-
-    # --------------------------------
-    # Financial status
-    # --------------------------------
+    # ----------------------------
+    # Financial Status
+    # ----------------------------
 
     if health_score >= 90:
         financial_status = "Excellent"
@@ -152,57 +157,47 @@ def get_dashboard(
     else:
         financial_status = "Critical"
 
-    # --------------------------------
-    # Savings rate
-    # --------------------------------
-
-    if total_income > 0:
-        savings_rate = (
-            net_savings
-            / total_income
-        ) * 100
-
-    else:
-        savings_rate = 0
-
-    # --------------------------------
-    # Budget status and message
-    # --------------------------------
+    # ----------------------------
+    # Budget Status
+    # ----------------------------
 
     if usage_percentage < 80:
+
         budget_status = "Within Budget"
 
         message = (
             f"{financial_status} financial health. "
             f"You have used only "
-            f"{round(usage_percentage, 2)}% "
-            f"of your monthly budget and saved "
-            f"{round(savings_rate, 2)}% "
-            f"of your income this month."
+            f"{usage_percentage:.2f}% "
+            "of your monthly budget and saved "
+            f"{savings_rate:.2f}% "
+            "of your income this month."
         )
 
     elif usage_percentage <= 100:
+
         budget_status = "Near Budget Limit"
 
         message = (
             f"{financial_status} financial health. "
             f"You have already used "
-            f"{round(usage_percentage, 2)}% "
-            f"of your monthly budget."
+            f"{usage_percentage:.2f}% "
+            "of your monthly budget."
         )
 
     else:
+
         budget_status = "Over Budget"
 
         message = (
             f"{financial_status} financial health. "
-            f"You have exceeded your monthly budget "
-            f"by ₹{abs(remaining_budget):.2f}."
+            "You have exceeded your monthly budget by "
+            f"₹{abs(remaining_budget):.2f}."
         )
 
-    # --------------------------------
+    # ----------------------------
     # Response
-    # --------------------------------
+    # ----------------------------
 
     return DashboardResponse(
         monthly_limit=db_budget.monthly_limit,
@@ -210,10 +205,10 @@ def get_dashboard(
         total_expenses=total_expenses,
         remaining_budget=remaining_budget,
         net_savings=net_savings,
-        savings_rate=round(savings_rate, 2),
-        usage_percentage=round(usage_percentage, 2),
+        savings_rate=savings_rate,
+        usage_percentage=usage_percentage,
         health_score=health_score,
         financial_status=financial_status,
         budget_status=budget_status,
-        message=message
+        message=message,
     )
